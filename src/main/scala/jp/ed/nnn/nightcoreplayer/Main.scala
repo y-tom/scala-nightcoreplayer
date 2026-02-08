@@ -13,12 +13,18 @@ import javafx.stage.Stage
 import javafx.util.Duration
 
 // --- JavaFX アプリ起動処理 ---
-object Main extends App {
-  Application.launch(classOf[Main], args: _*)
+object Main {
+  def main(args: Array[String]): Unit = {
+    Application.launch(classOf[Main], args: _*)
+  }
 }
 
 // --- JavaFX アプリの開始地点 ---
 class Main extends Application {
+  //　MediaView（動画表示用コンポーネント）のサイズを定数として切り出す
+  private[this] val mediaViewFitWidth = 800
+  private[this] val mediaViewFitHeight = 450
+  private[this] val toolBarMinHeight = 50
 
   override def start(primaryStage: Stage): Unit = {
     // --- resources 配下の動画ファイルを読み込む ---
@@ -30,9 +36,6 @@ class Main extends Application {
     mediaPlayer.play()
     val mediaView = new MediaView(mediaPlayer) //実際に映像を表示するJavaFXのNodeの子クラスのインスタンスをプレイヤーを引数として作成
     // --- 画面作成 ---
-    mediaView.setFitWidth(800) //MediaView（動画表示用コンポーネント）の横幅を 800px に固定（下にツールバーを置く余地を作るため）
-    mediaView.setFitHeight(450) // MediaView（動画表示用コンポーネント）の縦幅を 450px に固定
-
     // 再生時間表示用のラベルを作成
     val timeLabel = new Label()
     // 再生中、currentTime（現在の再生位置）が変化するたびに呼ばれるリスナーを登録
@@ -53,18 +56,20 @@ class Main extends Application {
     timeLabel.setTextFill(Color.WHITE) // 文字色を白に設定
 
     val toolBar = new HBox(timeLabel) // 再生時間ラベルを配置するための横並びコンテナ（ツールバー）を作成
+    toolBar.setMinHeight(toolBarMinHeight) // ツールバーの最低の高さを設定
     toolBar.setAlignment(Pos.CENTER) // ツールバー内の要素を中央寄せにする
     toolBar.setStyle("-fx-background-color: Black") // ツールバーの背景色を黒に設定
-    toolBar.setPrefHeight(50) //ツールバーの高さを設定 現環境では高さがないと、領域外or高さ0扱いで見えない
 
     val baseBorderPane = new BorderPane() //画面全体のレイアウトを管理するBorderPaneを作成　上下左右中央にUIを配置できるレイアウト
     baseBorderPane.setStyle("-fx-background-color: Black") //アプリ全体の背景色を黒にする
     baseBorderPane.setBottom(toolBar) // BorderPane の下部にツールバー（再生時間表示）を配置
     baseBorderPane.setCenter(mediaView) //BorderPaneクラスの中央にmediaView（動画）をセット
-    baseBorderPane.setBottom(toolBar)
 
-    val scene = new Scene(baseBorderPane, 800, 500) // 画面全体をまとめるSceneを作成 初期ウィンドウサイズを800×500に設定
+    val scene = new Scene(baseBorderPane, mediaViewFitWidth, mediaViewFitHeight + toolBarMinHeight) // 画面全体をまとめるSceneを作成 MediaViewの高さ＋ツールバーの高さを、全体の高さとする
     scene.setFill(Color.BLACK) // Scene 全体の背景色を黒に設定
+    mediaView.fitWidthProperty().bind(scene.widthProperty()) //mediaView の幅のプロパティを取得し、その値はオブザーバブルになっている
+    mediaView.fitHeightProperty().bind(scene.heightProperty().subtract(toolBarMinHeight)) // Scene の幅に変更があった際に、MediaViewの幅を追従するようにする処理
+
 
     primaryStage.setScene(scene) // メインウィンドウ（Stage）に Scene をセット
     primaryStage.show() //実際にウィンドウを画面に表示する
