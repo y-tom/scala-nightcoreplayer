@@ -8,8 +8,8 @@
         <option name="externalProjectPath" value="$PROJECT_DIR$" />
         <option name="modules">
           <set>
-            <option value="C:\Users\Yukako\IdeaProjects\nightcoreplayer\nightcoreplayer" />
-            <option value="C:\Users\Yukako\IdeaProjects\nightcoreplayer\nightcoreplayer\project" />
+            <option value="C:\Users\Yukako\workspace\IdeaProjects\nightcoreplayer\nightcoreplayer" />
+            <option value="C:\Users\Yukako\workspace\IdeaProjects\nightcoreplayer\nightcoreplayer\project" />
           </set>
         </option>
         <option name="sbtVersion" value="1.12.1" />
