@@ -150,7 +150,6 @@ class Main extends Application {
                             oldValue: Duration,
                             newValue: Duration
                           ): Unit =
-
         timeLabel.setText(formatTime(mediaPlayer.getCurrentTime, mediaPlayer.getTotalDuration))  // 現在の再生時間/動画の総再生時間をフォーマットしてラベルに表示
     })
 
