@@ -9,7 +9,7 @@ import javafx.event.EventHandler
 import javafx.geometry.Pos
 import javafx.scene.Scene
 import javafx.scene.control.cell.PropertyValueFactory
-import javafx.scene.control.{Label, TableColumn, TableRow, TableView}
+import javafx.scene.control._
 import javafx.scene.input.{DragEvent, MouseEvent, TransferMode}
 import javafx.scene.layout.{BorderPane, HBox}
 import javafx.scene.media.{Media, MediaPlayer, MediaView}
@@ -66,7 +66,7 @@ class Main extends Application {
         row.setOnMouseClicked(new EventHandler[MouseEvent] {
           override def handle(event: MouseEvent): Unit = {
             if (event.getClickCount >= 1 && !row.isEmpty) { // クリック回数 >= 1 かつ、空行でないことをチェック
-              playMovie(row.getItem, mediaView, timeLabel) // クリックされた行に紐づくMovieを取り出して再生
+              playMovie(row.getItem, tableView, mediaView, timeLabel) // クリックされた行に紐づくMovieを取り出して再生
             }
           }
         })
@@ -83,7 +83,16 @@ class Main extends Application {
     timeColumn.setCellValueFactory(new PropertyValueFactory("time"))
     timeColumn.setPrefWidth(80)
 
-    tableView.getColumns.setAll(fileNameColumn, timeColumn)
+    val deleteActionColumn = new TableColumn[Movie, Long]("削除")
+    deleteActionColumn.setCellValueFactory(new PropertyValueFactory("id"))
+    deleteActionColumn.setPrefWidth(60)
+    deleteActionColumn.setCellFactory(new Callback[TableColumn[Movie, Long], TableCell[Movie, Long]]() {
+      override def call(param: TableColumn[Movie, Long]): TableCell[Movie, Long] = {
+        new DeleteCell(movies, mediaView, tableView)
+      }
+    })
+
+    tableView.getColumns.setAll(fileNameColumn, timeColumn, deleteActionColumn)
 
     // --- BorderPane（レイアウト管理） ---
     val baseBorderPane = new BorderPane() // BorderPane作成　上下左右中央にUIを配置できるレイアウト
@@ -116,13 +125,19 @@ class Main extends Application {
             val filePath = f.getAbsolutePath
             val fileName = f.getName
             val media = new Media(f.toURI.toString)
-            val time = formatTime(media.getDuration) // NOTE: 講義でも言ってた通り duration はまだ取れないことがある
-            val movie = Movie(System.currentTimeMillis(), fileName, time, filePath, media)
-            // id重複回避（equalsがid比較なのでcontainsで検知できる）
-            while (movies.contains(movie)) {
-              movie.setId(movie.getId + 1L)
-            }
-            movies.add(movie) // ← ここでTableViewが自動更新される
+
+            val player = new MediaPlayer(media)
+            player.setOnReady(new Runnable {
+              override def run(): Unit = {
+                val time = formatTime(media.getDuration)
+                val movie = Movie(System.currentTimeMillis(), fileName, time, filePath, media)
+                while (movies.contains(movie)) { // id重複回避（equalsがid比較なのでcontainsで検知できる）
+                  movie.setId(movie.getId + 1L)
+                }
+                movies.add(movie) // ← ここでTableViewが自動更新される
+                player.dispose()
+              }
+            })
           }
         }
         event.consume()
@@ -134,7 +149,7 @@ class Main extends Application {
     primaryStage.show() //実際にウィンドウを画面に表示する
   }
   // --- 一覧の中のクリックされた動画を再生する処理 ---
-  private[this] def playMovie(movie: Movie, mediaView: MediaView, timeLabel: Label): Unit = {
+  private[this] def playMovie(movie: Movie, tableView: TableView[Movie], mediaView: MediaView, timeLabel: Label): Unit = {
     // すでに再生中の MediaPlayerがある場合は、必ず停止・破棄
     if (mediaView.getMediaPlayer != null) { 
       val oldPlayer = mediaView.getMediaPlayer
@@ -158,11 +173,25 @@ class Main extends Application {
       override def run(): Unit =
         timeLabel.setText(formatTime(mediaPlayer.getCurrentTime, mediaPlayer.getTotalDuration)) // 総再生時間が取得可能になったタイミングで表示を更新
     })
+    mediaPlayer.setOnEndOfMedia(new Runnable { // 再生終了イベントを監視、終わったら次の動画を再生する
+      override def run(): Unit = playNext(tableView, mediaView, timeLabel)
+    })
     mediaView.setMediaPlayer(mediaPlayer) //　作成したMediaPlayerをMediaViewにセット（表示側と再生側を接続）
     mediaPlayer.setRate(1.25) // 再生速度を1.25倍に設定
     mediaPlayer.play() // 再生開始
   }
-  
+
+  // --- ループ再生 ---
+  private[this] def playNext(tableView: TableView[Movie], mediaView: MediaView, timeLabel: Label): Unit = {
+    val selectionModel = tableView.getSelectionModel
+    if (selectionModel.isEmpty) return
+    val index = selectionModel.getSelectedIndex
+    val nextIndex = (index + 1) % tableView.getItems.size()
+    selectionModel.select(nextIndex)
+    val movie = selectionModel.getSelectedItem
+    playMovie(movie, tableView, mediaView, timeLabel)
+  }
+
   // --- 再生時間表示 --- フォーマット関数 elapsed:現在の再生位置 duration:動画の総再生時間
   private[this] def formatTime(elapsed: Duration): String =  {
     "%02d:%02d:%02d".format(  // %02d は「2桁で0埋めした整数」を意味するフォーマット指定　例:3→"03"

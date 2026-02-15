@@ -9,7 +9,7 @@ import javafx.scene.media.Media
 // - Main.scala では movie.setId / movie.getId のような JavaBeans 形式を呼んでいる
 // - JavaFX の PropertyValueFactory("fileName") も内部で getFileName() を探す（JavaBeans想定）
 // - Scala3 環境では @BeanProperty による自動生成が環境差で効かない場合があるため、
-//   ここでは確実に動くように getXxx/setXxx を手書きしている（詰まり解消優先の最小修正）
+//   ここでは確実に動くように getXxx/setXxx を手書きしている
 // ─────────────────────────────────────────────
 class Movie {
 
@@ -41,7 +41,7 @@ class Movie {
 
   // ── Scala っぽい参照も一応残す ──
   // Main.scala 側で movie.media を直接参照しているため、それに合わせて用意する
-  // （JavaBeansだけに寄せるなら Main.scala を getMedia に直す手もあるが、逸脱を避ける）
+  // （JavaBeansだけに寄せるなら Main.scala を getMedia に直す手もあるが、講義からの逸脱を避ける）
   def media: Media = _media
 
   // ── equals/hashCode は id ベース（containsチェック等に使う） ──
