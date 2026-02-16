@@ -5,11 +5,12 @@ import java.io.File //動画ファイルをresource配下としたため不要�
 import javafx.application.Application
 import javafx.beans.value.{ChangeListener, ObservableValue}
 import javafx.collections.FXCollections
-import javafx.event.EventHandler
+import javafx.event.{ActionEvent, EventHandler}
 import javafx.geometry.Pos
 import javafx.scene.Scene
 import javafx.scene.control.cell.PropertyValueFactory
 import javafx.scene.control._
+import javafx.scene.image.{Image, ImageView}
 import javafx.scene.input.{DragEvent, MouseEvent, TransferMode}
 import javafx.scene.layout.{BorderPane, HBox}
 import javafx.scene.media.{Media, MediaPlayer, MediaView}
@@ -43,7 +44,7 @@ class Main extends Application {
     timeLabel.setTextFill(Color.WHITE) // 文字色を白に設定
 
     // --- ツールバー（再生時間ラベルを配置するための横並びコンテナ） ---
-    val toolBar = new HBox(timeLabel) // ツールバー作成
+    val toolBar = new HBox() // ツールバー作成
     toolBar.setMinHeight(toolBarMinHeight) // ツールバーの最低の高さを設定
     toolBar.setAlignment(Pos.CENTER) // ツールバー内の要素を中央寄せにする
     toolBar.setStyle("-fx-background-color: Black") // ツールバーの背景色を黒に設定
@@ -93,6 +94,166 @@ class Main extends Application {
     })
 
     tableView.getColumns.setAll(fileNameColumn, timeColumn, deleteActionColumn)
+
+    // --- ツールバー各ボタン --- 各ボタンはplayボタンとほぼ同じ構造
+    // first button
+    val firstButtonImage = new Image(getClass.getResourceAsStream("first.png"))
+    val firstButton = new Button()
+    firstButton.setGraphic(new ImageView(firstButtonImage))
+    firstButton.setStyle("-fx-background-color: Black")
+    firstButton.setOnAction(new EventHandler[ActionEvent]() {
+      override def handle(event: ActionEvent): Unit =
+        if (mediaView.getMediaPlayer != null) {
+          playPre(tableView, mediaView, timeLabel)
+        }
+    })
+    firstButton.addEventHandler(MouseEvent.MOUSE_ENTERED, new EventHandler[MouseEvent]() {
+      override def handle(event: MouseEvent): Unit = {
+        firstButton.setStyle("-fx-body-color: Black")
+      }
+    })
+    firstButton.addEventHandler(MouseEvent.MOUSE_EXITED, new EventHandler[MouseEvent]() {
+      override def handle(event: MouseEvent): Unit = {
+        firstButton.setStyle("-fx-background-color: Black")
+      }
+    })
+
+    // back button
+    val backButtonImage = new Image(getClass.getResourceAsStream("back.png"))
+    val backButton = new Button()
+    backButton.setGraphic(new ImageView(backButtonImage))
+    backButton.setStyle("-fx-background-color: Black")
+    backButton.setOnAction(new EventHandler[ActionEvent]() {
+      override def handle(event: ActionEvent): Unit =
+        if (mediaView.getMediaPlayer != null) {
+          mediaView.getMediaPlayer.seek(
+            mediaView.getMediaPlayer.getCurrentTime.subtract(new Duration(10000))) // 10秒だけ後ろに戻して再生する
+        }
+    })
+    backButton.addEventHandler(MouseEvent.MOUSE_ENTERED, new EventHandler[MouseEvent]() {
+      override def handle(event: MouseEvent): Unit = {
+        backButton.setStyle("-fx-body-color: Black")
+      }
+    })
+    backButton.addEventHandler(MouseEvent.MOUSE_EXITED, new EventHandler[MouseEvent]() {
+      override def handle(event: MouseEvent): Unit = {
+        backButton.setStyle("-fx-background-color: Black")
+      }
+    })
+
+    // play button
+    val playButtonImage = new Image(getClass.getResourceAsStream("play.png")) // 画像のインスタンス作成
+    val playButton = new Button() // Buttonインスタンス作成
+    playButton.setGraphic(new ImageView(playButtonImage)) // Buttonと画像を関連付け
+    playButton.setStyle("-fx-background-color: Black") // Buttonに対するスタイルを設定
+    playButton.setOnAction(new EventHandler[ActionEvent]() { // play buttonが押されたときの処理
+      override def handle(event: ActionEvent): Unit = {
+        val selectionModel = tableView.getSelectionModel // TableVeiw から SelectionModel という選択を管理するモデルを取得
+        if (mediaView.getMediaPlayer != null && !selectionModel.isEmpty) { // MediaPlayerのインスタンスがすでにMediaView内にあり、選択が空でないときのみ実行
+          mediaView.getMediaPlayer.play()
+        }
+      }
+    })
+    playButton.addEventHandler(MouseEvent.MOUSE_ENTERED, new EventHandler[MouseEvent]() { // Buttonに対するスタイルを設定
+      override def handle(event: MouseEvent): Unit = {
+        playButton.setStyle("-fx-body-color: Black") // ボタンにマウスを重ねたときに選択の枠を表示
+      }
+    })
+    playButton.addEventHandler(MouseEvent.MOUSE_EXITED, new EventHandler[MouseEvent]() {
+      override def handle(event: MouseEvent): Unit = {
+        playButton.setStyle("-fx-background-color: Black")
+      }
+    })
+
+    // pause button
+    val pauseButtonImage = new Image(getClass.getResourceAsStream("pause.png")) // playbuttonと同様の実装
+    val pauseButton = new Button()
+    pauseButton.setGraphic(new ImageView(pauseButtonImage))
+    pauseButton.setStyle("-fx-background-color: Black")
+    pauseButton.setOnAction(new EventHandler[ActionEvent]() {
+      override def handle(event: ActionEvent): Unit = {
+        if (mediaView.getMediaPlayer != null) mediaView.getMediaPlayer.pause() // MediaPlayerのインスタンスがある時のみplayerを停止
+      }
+    })
+    pauseButton.addEventHandler(MouseEvent.MOUSE_ENTERED, new EventHandler[MouseEvent]() {
+      override def handle(event: MouseEvent): Unit = {
+        pauseButton.setStyle("-fx-body-color: Black")
+      }
+    })
+    pauseButton.addEventHandler(MouseEvent.MOUSE_EXITED, new EventHandler[MouseEvent]() {
+      override def handle(event: MouseEvent): Unit = {
+        pauseButton.setStyle("-fx-background-color: Black")
+      }
+    })
+
+    // forward button
+    val forwardButtonImage = new Image(getClass.getResourceAsStream("forward.png"))
+    val forwardButton = new Button()
+    forwardButton.setGraphic(new ImageView(forwardButtonImage))
+    forwardButton.setStyle("-fx-background-color: Black")
+    forwardButton.setOnAction(new EventHandler[ActionEvent]() {
+      override def handle(event: ActionEvent): Unit =
+        if (mediaView.getMediaPlayer != null) {
+          mediaView.getMediaPlayer.seek(
+            mediaView.getMediaPlayer.getCurrentTime.add(new Duration(10000))) // 10秒先進めて再生する
+        }
+    })
+    forwardButton.addEventHandler(MouseEvent.MOUSE_ENTERED, new EventHandler[MouseEvent]() {
+      override def handle(event: MouseEvent): Unit = {
+        forwardButton.setStyle("-fx-body-color: Black")
+      }
+    })
+    forwardButton.addEventHandler(MouseEvent.MOUSE_EXITED, new EventHandler[MouseEvent]() {
+      override def handle(event: MouseEvent): Unit = {
+        forwardButton.setStyle("-fx-background-color: Black")
+      }
+    })
+
+    // last button
+    val lastButtonImage = new Image(getClass.getResourceAsStream("last.png"))
+    val lastButton = new Button()
+    lastButton.setGraphic(new ImageView(lastButtonImage))
+    lastButton.setStyle("-fx-background-color: Black")
+    lastButton.setOnAction(new EventHandler[ActionEvent]() {
+      override def handle(event: ActionEvent): Unit =
+        if (mediaView.getMediaPlayer != null) {
+          playNext(tableView, mediaView, timeLabel)
+        }
+    })
+    lastButton.addEventHandler(MouseEvent.MOUSE_ENTERED, new EventHandler[MouseEvent]() {
+      override def handle(event: MouseEvent): Unit = {
+        lastButton.setStyle("-fx-body-color: Black")
+      }
+    })
+    lastButton.addEventHandler(MouseEvent.MOUSE_EXITED, new EventHandler[MouseEvent]() {
+      override def handle(event: MouseEvent): Unit = {
+        lastButton.setStyle("-fx-background-color: Black")
+      }
+    })
+
+    // fullscreen button
+    val fullscreenButtonImage = new Image(getClass.getResourceAsStream("fullscreen.png"))
+    val fullscreenButton = new Button()
+    fullscreenButton.setGraphic(new ImageView(fullscreenButtonImage))
+    fullscreenButton.setStyle("-fx-background-color: Black")
+    fullscreenButton.setOnAction(new EventHandler[ActionEvent]() {
+      override def handle(event: ActionEvent): Unit =
+        primaryStage.setFullScreen(true)
+    })
+    fullscreenButton.addEventHandler(MouseEvent.MOUSE_ENTERED, new EventHandler[MouseEvent]() {
+      override def handle(event: MouseEvent): Unit = {
+        fullscreenButton.setStyle("-fx-body-color: Black")
+      }
+    })
+    fullscreenButton.addEventHandler(MouseEvent.MOUSE_EXITED, new EventHandler[MouseEvent]() {
+      override def handle(event: MouseEvent): Unit = {
+        fullscreenButton.setStyle("-fx-background-color: Black")
+      }
+    })
+
+    // ツールバーに各ボタンを追加
+    toolBar.getChildren.addAll(
+      firstButton, backButton, playButton, pauseButton, forwardButton, lastButton, fullscreenButton, timeLabel)
 
     // --- BorderPane（レイアウト管理） ---
     val baseBorderPane = new BorderPane() // BorderPane作成　上下左右中央にUIを配置できるレイアウト
@@ -148,6 +309,7 @@ class Main extends Application {
     primaryStage.setScene(scene) // メインウィンドウ（Stage）に Scene をセット
     primaryStage.show() //実際にウィンドウを画面に表示する
   }
+
   // --- 一覧の中のクリックされた動画を再生する処理 ---
   private[this] def playMovie(movie: Movie, tableView: TableView[Movie], mediaView: MediaView, timeLabel: Label): Unit = {
     // すでに再生中の MediaPlayerがある場合は、必ず停止・破棄
@@ -167,7 +329,6 @@ class Main extends Application {
                           ): Unit =
         timeLabel.setText(formatTime(mediaPlayer.getCurrentTime, mediaPlayer.getTotalDuration))  // 現在の再生時間/動画の総再生時間をフォーマットしてラベルに表示
     })
-
     // メディアの読み込みが完了（READY）したタイミングで一度だけ呼ばれる処理
     mediaPlayer.setOnReady(new Runnable { // READY後でないと totalDuration が取れないケースがあるため、ここで初回表示も更新する
       override def run(): Unit =
@@ -181,7 +342,18 @@ class Main extends Application {
     mediaPlayer.play() // 再生開始
   }
 
-  // --- ループ再生 ---
+  // --- 前へ戻る処理 ---
+  private[this] def playPre(tableView: TableView[Movie], mediaView: MediaView, timeLabel: Label): Unit = {
+    val selectionModel = tableView.getSelectionModel
+    if (selectionModel.isEmpty) return
+    val index = selectionModel.getSelectedIndex
+    val preIndex = (tableView.getItems.size() + index - 1) % tableView.getItems.size()
+    selectionModel.select(preIndex)
+    val movie = selectionModel.getSelectedItem
+    playMovie(movie, tableView, mediaView, timeLabel)
+  }
+
+  // --- 次へ進む処理 ---　ループ再生、次へ進むボタンで使用
   private[this] def playNext(tableView: TableView[Movie], mediaView: MediaView, timeLabel: Label): Unit = {
     val selectionModel = tableView.getSelectionModel
     if (selectionModel.isEmpty) return
@@ -192,7 +364,7 @@ class Main extends Application {
     playMovie(movie, tableView, mediaView, timeLabel)
   }
 
-  // --- 再生時間表示 --- フォーマット関数 elapsed:現在の再生位置 duration:動画の総再生時間
+  // --- 再生時間表示処理 --- フォーマット関数 elapsed:現在の再生位置 duration:動画の総再生時間
   private[this] def formatTime(elapsed: Duration): String =  {
     "%02d:%02d:%02d".format(  // %02d は「2桁で0埋めした整数」を意味するフォーマット指定　例:3→"03"
       // ── 現在の再生時間 ──
