@@ -1,5 +1,5 @@
 // ── プロジェクト全体で共通の設定 ──
-ThisBuild / version := "1.0.0-SNAPSHOT"           // プロジェクトのバージョン
+ThisBuild / version := "1.0.0"           // プロジェクトのバージョン
 ThisBuild / organization := "jp.ed.nnn"          // 組織名（パッケージ名に使われることが多い）
 ThisBuild / scalaVersion := "3.3.3"             // Scala 3.3.3 を使用
 
